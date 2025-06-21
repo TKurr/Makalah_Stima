@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.control.MainController" alignment="CENTER" prefWidth="800" prefHeight="600">
+    <HBox alignment="CENTER" spacing="10">
+        <VBox alignment="CENTER" spacing="20">
+            <VBox alignment="CENTER" spacing="10">
+                <Label text="Color Connect Solver" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <Button text="Pilih File Puzzle (.txt)" onAction="#onChooseFile"/>
+            </VBox>
+            <HBox>
+                <GridPane fx:id="gridPane" layoutX="10.0" layoutY="10.0" />
+            </HBox>
+            <Button text="Solve" fx:id="solveButton" onAction="#onSolve" disable="true"/>
+        </VBox>
+    </HBox>
+</VBox>
