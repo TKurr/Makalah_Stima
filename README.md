@@ -1,14 +1,15 @@
-# Tucil1_13523154
-
-# Puzzle Save and Load Program
+# Color Connect Solver
+![alt text](public/awal.png)
+![alt text](public/akhir.png)
 
 ## a. Penjelasan Singkat Program
-Program ini memungkinkan pengguna untuk menyelesaikan permainan IQ Puzzler Pro dengan menggunakan algoritma Bruteforce. Pengguna dapat menginput nama file dengan format `.txt` untuk menyimpan puzzle dalam format `.txt` dan `.png`. Program ini menggunakan bahasa pemrograman Java dan JavaFX untuk GUI. Program juga memungkinkan pengguna untuk menyimpan tampilan grid dari solusi sebagai gambar dan data grid sebagai teks.
+Program ini menyelesaikan permainan Color Connect / Flow Puzzle secara otomatis menggunakan algoritma Backtracking yang dioptimalkan dengan heuristik Manhattan Distance. Program memvisualisasikan langkah penyelesaian secara bertahap menggunakan JavaFX dan dapat membaca papan dari file .txt.
 
 ### Fitur Utama:
-- Menyelesaikan permaianan IQ Puzzler Pro.
-- Menyimpan solusi puzzle sebagai file teks (`.txt`), berisi representasi grid puzzle.
-- Menyimpan solusi puzzle sebagai gambar (`.png`), sesuai dengan tampilan grid.
+- Menyelesaikan puzzle Color Connect menggunakan backtracking + heuristik manhattan distance.
+- Menampilkan visualisasi penyelesaian langkah demi langkah di GUI.
+- Mendukung input dari file teks .txt.
+- Otomatis menyambungkan semua pasangan titik warna berbeda.
 
 ---
 
@@ -55,10 +56,9 @@ Jika Anda ingin mengkompilasi program secara manual, pastikan JDK, JavaFX, dan M
 
 ## d. Cara Menjalankan dan Menggunakan Program
 
-   - **Input Nama File**: Tekan tombol "Select File" untuk mencari file `.txt`.
+   - **Input Nama File**: Tekan tombol "Select File" untuk mencari file `.txt` (Contoh format tersedia pada folder /src/main/resources).
    - **Jalankan Algoritma**: Tekan tombol "Solve Puzzle" untuk menjalankan program pencarian solusi puzzle.
-   - **Menyimpan solusi**: Tekan tombol "Save Solution" untuk menyimpan solusi program dalam format `.txt` dan `.png` pada folder /test.
-
+   
 ---
 
 ## e. Author / Identitas Pembuat
