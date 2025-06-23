@@ -8,7 +8,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.control.Button;     
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.application.Platform;     
 
 import java.io.File;
@@ -16,9 +17,10 @@ import java.io.File;
 public class MainController {
     @FXML
     private GridPane gridPane;
-
     @FXML
     private Button solveButton;
+    @FXML
+    private ComboBox<String> algorithmChoice;
 
     private Grid loadedGrid;
 
@@ -31,6 +33,12 @@ public class MainController {
             Color.DARKBLUE, Color.CORAL, Color.TEAL, Color.DEEPPINK, Color.SADDLEBROWN,
             Color.LIGHTSEAGREEN, Color.OLIVE, Color.STEELBLUE, Color.DARKVIOLET, Color.GOLD
     };
+
+    @FXML
+    public void initialize() {
+        algorithmChoice.getItems().addAll("UCS", "GBFS", "A*");
+        algorithmChoice.setValue("A*"); 
+    }
 
     public void onChooseFile() {
         FileChooser fileChooser = new FileChooser();
@@ -47,7 +55,7 @@ public class MainController {
     
                 loadedGrid = reader.getGrid();
                 renderGrid(loadedGrid.getGrid());
-                solveButton.setDisable(false); // enable the button
+                solveButton.setDisable(false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -57,14 +65,20 @@ public class MainController {
     @FXML
     public void onSolve() {
         if (loadedGrid == null) return;
-
+    
+        String selectedAlgorithm = algorithmChoice.getValue();
+        if (selectedAlgorithm == null) return;
+    
         Solver solver = new Solver(loadedGrid);
         new Thread(() -> {
-            solver.solve(updatedGrid -> {
-                Platform.runLater(() -> renderGrid(updatedGrid));
-            });
+            switch (selectedAlgorithm) {
+                case "UCS" -> solver.solveWith("ucs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+                case "GBFS" -> solver.solveWith("gbfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+                case "A*" -> solver.solveWith("astar", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+            }
         }).start();
     }
+    
 
     private void renderGrid(char[][] data) {
         gridPane.getChildren().clear();

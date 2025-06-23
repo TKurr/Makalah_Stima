@@ -33,110 +33,40 @@ public class Solver {
         return map;
     }
 
-    private int manhattan(Point a, Point b) {
-        return Math.abs(a.getRow() - b.getRow()) + Math.abs(a.getCol() - b.getCol());
-    }
+    // private void findAllPaths(int r, int c, Point end, char ch, boolean[][] visited,
+    //                           List<Point> path, List<List<Point>> allPaths) {
+    //     if (r == end.getRow() && c == end.getCol()) {
+    //         allPaths.add(new ArrayList<>(path));
+    //         return;
+    //     }
 
-    private void findAllPaths(int r, int c, Point end, char ch, boolean[][] visited,
-                              List<Point> path, List<List<Point>> allPaths) {
-        if (r == end.getRow() && c == end.getCol()) {
-            allPaths.add(new ArrayList<>(path));
-            return;
-        }
+    //     visited[r][c] = true;
 
-        visited[r][c] = true;
+    //     List<int[]> dirs = prioritizeDirs(r, c, end);
 
-        List<int[]> dirs = prioritizeDirs(r, c, end);
+    //     for (int[] d : dirs) {
+    //         int nr = r + d[0], nc = c + d[1];
 
-        for (int[] d : dirs) {
-            int nr = r + d[0], nc = c + d[1];
+    //         if (inBounds(nr, nc) && !visited[nr][nc] &&
+    //                 (grid.getGrid()[nr][nc] == '.' || (nr == end.getRow() && nc == end.getCol()))) {
+    //             path.add(new Point(nr, nc));
+    //             findAllPaths(nr, nc, end, ch, visited, path, allPaths);
+    //             path.remove(path.size() - 1);
+    //         }
+    //     }
 
-            if (inBounds(nr, nc) && !visited[nr][nc] &&
-                    (grid.getGrid()[nr][nc] == '.' || (nr == end.getRow() && nc == end.getCol()))) {
-                path.add(new Point(nr, nc));
-                findAllPaths(nr, nc, end, ch, visited, path, allPaths);
-                path.remove(path.size() - 1);
-            }
-        }
-
-        visited[r][c] = false;
-    }
-
-    private String pathToString(List<Point> path) {
-        StringBuilder sb = new StringBuilder();
-        for (Point p : path) {
-            sb.append(p.getRow()).append(',').append(p.getCol()).append(';');
-        }
-        return sb.toString();
-    }
-
-    public boolean solve(Consumer<char[][]> onStep) {
-        List<Map.Entry<Character, List<Point>>> sortedPairs = new ArrayList<>(endpoints.entrySet());
-        sortedPairs.sort(Comparator.comparingInt(e ->
-                manhattan(e.getValue().get(0), e.getValue().get(1))));
-
-        List<Character> keys = new ArrayList<>();
-        for (Map.Entry<Character, List<Point>> entry : sortedPairs) {
-            keys.add(entry.getKey());
-        }
-        return backtrack(0, keys, onStep);
-    }
-
-    private boolean backtrack(int idx, List<Character> keys, Consumer<char[][]> onStep) {
-        if (idx == keys.size()) return true;
+    //     visited[r][c] = false;
+    // }
     
-        char ch = keys.get(idx);
-        List<Point> points = endpoints.get(ch);
-        Point start = points.get(0);
-        Point end = points.get(1);
-    
-        Set<String> triedPaths = new HashSet<>();
-        char[][] originalGrid = copyGrid();
-    
-        while (true) {
-            boolean[][] visited = new boolean[grid.getRows()][grid.getCols()];
-            List<List<Point>> allPaths = new ArrayList<>();
-            findAllPaths(start.getRow(), start.getCol(), end, ch, visited,
-                         new ArrayList<>(List.of(start)), allPaths);
-    
-            allPaths.removeIf(path -> triedPaths.contains(pathToString(path)));
-    
-            allPaths.sort(Comparator.comparingInt(List::size));
-    
-            if (allPaths.isEmpty()) break;
-    
-            List<Point> path = allPaths.get(0);
-            triedPaths.add(pathToString(path));
-    
-            for (Point p : path) {
-                grid.getGrid()[p.getRow()][p.getCol()] = ch;
-                onStep.accept(copyGrid());
-                sleep(30);
-            }
-    
-            if (backtrack(idx + 1, keys, onStep)) return true;
-    
-            grid.setGrid(copyGrid(originalGrid));
-            onStep.accept(copyGrid());
-            sleep(30);
-        }
-    
-        return false;
-    }
-
     private List<int[]> prioritizeDirs(int r, int c, Point end) {
         List<int[]> dirs = new ArrayList<>(Arrays.asList(DIRS));
         dirs.sort(Comparator.comparingInt(d ->
-                manhattan(r + d[0], c + d[1], end.getRow(), end.getCol())));
+                Point.manhattan(r + d[0], c + d[1], end.getRow(), end.getCol())));
         return dirs;
     }
 
     private boolean inBounds(int r, int c) {
         return r >= 0 && c >= 0 && r < grid.getRows() && c < grid.getCols();
-    }
-
-    private int manhattan(int r1, int c1, int r2, int c2) {
-        return Math.abs(r1 - r2) + Math.abs(c1 - c2);
     }
 
     private void sleep(long ms) {
@@ -153,5 +83,176 @@ public class Solver {
             copy[i] = Arrays.copyOf(original[i], original[i].length);
         }
         return copy;
+    }
+
+    private String pathToString(List<Point> path) {
+        StringBuilder sb = new StringBuilder();
+        for (Point p : path) {
+            sb.append(p.getRow()).append(',').append(p.getCol()).append(';');
+        }
+        return sb.toString();
+    }
+
+    private List<Point> findUCSPath(Point start, Point end, Set<String> tried) {
+        PriorityQueue<List<Point>> pq = new PriorityQueue<>(Comparator.comparingInt(List::size));
+        Set<String> visited = new HashSet<>();
+    
+        pq.add(List.of(start));
+    
+        while (!pq.isEmpty()) {
+            List<Point> path = pq.poll();
+            Point curr = path.get(path.size() - 1);
+    
+            if (curr.equals(end)) {
+                String sig = pathToString(path);
+                if (!tried.contains(sig)) return path;
+                else continue;
+            }
+    
+            for (int[] d : DIRS) { 
+                int nr = curr.getRow() + d[0], nc = curr.getCol() + d[1];
+                Point next = new Point(nr, nc);
+                if (inBounds(nr, nc) &&
+                   (grid.getGrid()[nr][nc] == '.' || next.equals(end)) &&
+                   !path.contains(next)) {
+                    List<Point> newPath = new ArrayList<>(path);
+                    newPath.add(next);
+                    String sig = pathToString(newPath);
+                    if (!visited.contains(sig)) {
+                        pq.add(newPath);
+                        visited.add(sig);
+                    }
+                }
+            }
+        }
+    
+        return null;
+    }
+
+    private List<Point> findGreedyPath(Point start, Point end, Set<String> tried) {
+        PriorityQueue<List<Point>> pq = new PriorityQueue<>(Comparator.comparingInt(
+            path -> Point.manhattan(path.get(path.size() - 1), end)
+        ));
+        Set<String> visited = new HashSet<>();
+        
+        pq.add(List.of(start));
+        
+        while (!pq.isEmpty()) {
+            List<Point> path = pq.poll();
+            Point curr = path.get(path.size() - 1);
+            
+            if (curr.equals(end)) {
+                String sig = pathToString(path);
+                if (!tried.contains(sig)) return path;
+                else continue;
+            }
+            
+            for (int[] d : prioritizeDirs(curr.getRow(), curr.getCol(), end)) {
+                int nr = curr.getRow() + d[0], nc = curr.getCol() + d[1];
+                Point next = new Point(nr, nc);
+                if (inBounds(nr, nc) &&
+                   (grid.getGrid()[nr][nc] == '.' || next.equals(end)) &&
+                   !path.contains(next)) {
+                    List<Point> newPath = new ArrayList<>(path);
+                    newPath.add(next);
+                    String sig = pathToString(newPath);
+                    if (!visited.contains(sig)) {
+                        pq.add(newPath);
+                        visited.add(sig);
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    private List<Point> findAStarPath(Point start, Point end, Set<String> tried) {
+        PriorityQueue<List<Point>> pq = new PriorityQueue<>(Comparator.comparingInt(
+            path -> path.size() + Point.manhattan(path.get(path.size() - 1), end)
+        ));
+        Set<String> visited = new HashSet<>();
+    
+        pq.add(List.of(start));
+    
+        while (!pq.isEmpty()) {
+            List<Point> path = pq.poll();
+            Point curr = path.get(path.size() - 1);
+    
+            if (curr.equals(end)) {
+                String sig = pathToString(path);
+                if (!tried.contains(sig)) return path;
+                else continue;
+            }
+    
+            for (int[] d : DIRS) {
+                int nr = curr.getRow() + d[0], nc = curr.getCol() + d[1];
+                Point next = new Point(nr, nc);
+    
+                if (inBounds(nr, nc) &&
+                    (grid.getGrid()[nr][nc] == '.' || next.equals(end)) &&
+                    !path.contains(next)) {
+                    
+                    List<Point> newPath = new ArrayList<>(path);
+                    newPath.add(next);
+                    String sig = pathToString(newPath);
+    
+                    if (!visited.contains(sig)) {
+                        pq.add(newPath);
+                        visited.add(sig);
+                    }
+                }
+            }
+        }
+    
+        return null;
+    }
+
+    public boolean solveWith(String method, Consumer<char[][]> onStep) {
+        List<Map.Entry<Character, List<Point>>> sortedPairs = new ArrayList<>(endpoints.entrySet());
+        List<Character> keys = new ArrayList<>();
+        for (Map.Entry<Character, List<Point>> entry : sortedPairs) {
+            keys.add(entry.getKey());
+        }
+    
+        return backtrack(0, keys, onStep, method);
+    }
+    
+    private boolean backtrack(int idx, List<Character> keys, Consumer<char[][]> onStep, String method) {
+        if (idx == keys.size()) return true;
+    
+        char ch = keys.get(idx);
+        List<Point> points = endpoints.get(ch);
+        Point start = points.get(0);
+        Point end = points.get(1);
+    
+        Set<String> triedPaths = new HashSet<>();
+        char[][] originalGrid = copyGrid();
+    
+        while (true) {
+            List<Point> path = switch (method.toLowerCase()) {
+                case "ucs" -> findUCSPath(start, end, triedPaths);
+                case "gbfs" -> findGreedyPath(start, end, triedPaths);
+                case "astar" -> findAStarPath(start, end, triedPaths);
+                default -> null;
+            };
+    
+            if (path == null) break;
+    
+            triedPaths.add(pathToString(path));
+            for (Point p : path) {
+                grid.getGrid()[p.getRow()][p.getCol()] = ch;
+                onStep.accept(copyGrid());
+                sleep(10);
+            }
+    
+            if (backtrack(idx + 1, keys, onStep, method)) return true;
+    
+            grid.setGrid(copyGrid(originalGrid));
+            onStep.accept(copyGrid());
+            sleep(10);
+        }
+    
+        return false;
     }
 }

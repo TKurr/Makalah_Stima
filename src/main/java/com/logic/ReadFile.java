@@ -9,7 +9,7 @@ import java.util.*;
 
 public class ReadFile {
     private Grid grid;
-    private Map<Character, PathEndpoints> endpoints = new HashMap<>();
+    private final Map<Character, PathEndpoints> endpoints = new HashMap<>();
 
     public void readFromFile(String filename) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
