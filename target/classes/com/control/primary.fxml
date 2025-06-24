@@ -14,6 +14,10 @@
             </VBox>
             <HBox>
                 <GridPane fx:id="gridPane" layoutX="10.0" layoutY="10.0" />
+                <HBox>
+                    <Label text="Waktu : "/>
+                    <Label fx:id="timeLabel"/>
+                </HBox>
             </HBox>
             <Button text="Solve" fx:id="solveButton" onAction="#onSolve" disable="true"/>
         </VBox>

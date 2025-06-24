@@ -256,14 +256,18 @@ public class Solver {
                 }
             }
         }
-    
         return null;
     }
 
     public boolean solveWith(String method, 
                              Consumer<char[][]> onStep) {
         List<Map.Entry<Character, List<Point>>> sortedPairs = 
-                    new ArrayList<>(endpoints.entrySet());
+                        new ArrayList<>(endpoints.entrySet());
+        
+        sortedPairs.sort(Comparator.comparingInt(entry -> {
+            List<Point> pts = entry.getValue();
+            return Point.manhattan(pts.get(0), pts.get(1));
+        }));
         List<Character> keys = new ArrayList<>();
         for (Map.Entry<Character, List<Point>> entry : sortedPairs) {
             keys.add(entry.getKey());

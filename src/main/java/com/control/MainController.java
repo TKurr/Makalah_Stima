@@ -1,18 +1,21 @@
 package com.control;
 
-import com.datastruct.*;
-import com.logic.*;
+import java.io.File;
+
+import com.datastruct.Grid;
+import com.logic.ReadFile;
+import com.logic.Solver;
+
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.layout.GridPane;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.application.Platform;     
-
-import java.io.File;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 public class MainController {
     @FXML
@@ -21,6 +24,8 @@ public class MainController {
     private Button solveButton;
     @FXML
     private ComboBox<String> algorithmChoice;
+    @FXML
+    private Label timeLabel;
 
     private Grid loadedGrid;
 
@@ -63,22 +68,41 @@ public class MainController {
     }
 
     @FXML
-    public void onSolve() {
-        if (loadedGrid == null) return;
-    
-        String selectedAlgorithm = algorithmChoice.getValue();
-        if (selectedAlgorithm == null) return;
-    
-        Solver solver = new Solver(loadedGrid);
-        new Thread(() -> {
-            switch (selectedAlgorithm) {
-                case "DFS" -> solver.solveWith("dfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
-                case "UCS" -> solver.solveWith("ucs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
-                case "GBFS" -> solver.solveWith("gbfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
-                case "A*" -> solver.solveWith("astar", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
-            }
-        }).start();
-    }
+public void onSolve() {
+    if (loadedGrid == null) return;
+
+    String selectedAlgorithm = algorithmChoice.getValue();
+    if (selectedAlgorithm == null) return;
+
+    Solver solver = new Solver(loadedGrid);
+
+    new Thread(() -> {
+        long startTime = System.currentTimeMillis(); 
+
+        boolean result = switch (selectedAlgorithm) {
+            case "DFS" -> solver.solveWith("dfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+            case "UCS" -> solver.solveWith("ucs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+            case "GBFS" -> solver.solveWith("gbfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+            case "A*" -> solver.solveWith("astar", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
+            default -> false;
+        };
+
+        long endTime = System.currentTimeMillis(); 
+        long duration = endTime - startTime;
+
+        System.out.println("Solving time: " + duration + " ms");
+
+        Platform.runLater(() -> {
+            timeLabel.setText(duration + " ms");
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle("Informasi");
+            alert.setHeaderText("Solusi ditemukan");
+            alert.setContentText("Waktu penyelesaian: " + duration + " ms");
+            alert.show();
+        });
+
+    }).start();
+}
     
 
     private void renderGrid(char[][] data) {
