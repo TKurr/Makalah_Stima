@@ -1,9 +1,19 @@
 package com.logic;
 
-import com.datastruct.*;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.Stack;
 import java.util.function.Consumer;
+
+import com.datastruct.Grid;
+import com.datastruct.Point;
 
 public class Solver {
 
@@ -33,6 +43,33 @@ public class Solver {
         return map;
     }
 
+    private boolean inBounds(int r, int c) {
+        return r >= 0 && c >= 0 && r < grid.getRows() && c < grid.getCols();
+    }
+
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+    }
+
+    private char[][] copyGrid() {
+        return copyGrid(grid.getGrid());
+    }
+
+    private char[][] copyGrid(char[][] original) {
+        char[][] copy = new char[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            copy[i] = Arrays.copyOf(original[i], original[i].length);
+        }
+        return copy;
+    }
+
+    private List<int[]> prioritizeDirs(int r, int c, Point end) {
+        List<int[]> dirs = new ArrayList<>(Arrays.asList(DIRS));
+        dirs.sort(Comparator.comparingInt(d ->
+                Point.manhattan(r + d[0], c + d[1], end.getRow(), end.getCol())));
+        return dirs;
+    }
+
     // private void findAllPaths(int r, int c, Point end, char ch, boolean[][] visited,
     //                           List<Point> path, List<List<Point>> allPaths) {
     //     if (r == end.getRow() && c == end.getCol()) {
@@ -57,40 +94,55 @@ public class Solver {
 
     //     visited[r][c] = false;
     // }
-    
-    private List<int[]> prioritizeDirs(int r, int c, Point end) {
-        List<int[]> dirs = new ArrayList<>(Arrays.asList(DIRS));
-        dirs.sort(Comparator.comparingInt(d ->
-                Point.manhattan(r + d[0], c + d[1], end.getRow(), end.getCol())));
-        return dirs;
-    }
-
-    private boolean inBounds(int r, int c) {
-        return r >= 0 && c >= 0 && r < grid.getRows() && c < grid.getCols();
-    }
-
-    private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
-    }
-
-    private char[][] copyGrid() {
-        return copyGrid(grid.getGrid());
-    }
-
-    private char[][] copyGrid(char[][] original) {
-        char[][] copy = new char[original.length][];
-        for (int i = 0; i < original.length; i++) {
-            copy[i] = Arrays.copyOf(original[i], original[i].length);
-        }
-        return copy;
-    }
 
     private String pathToString(List<Point> path) {
         StringBuilder sb = new StringBuilder();
         for (Point p : path) {
-            sb.append(p.getRow()).append(',').append(p.getCol()).append(';');
+            sb.append(p.getRow())
+            .append(',')
+            .append(p.getCol())
+            .append(';');
         }
         return sb.toString();
+    }
+
+    private List<Point> findDFSPath(Point start, Point end, Set<String> tried) {
+        Stack<List<Point>> stack = new Stack<>();
+        Set<String> visited = new HashSet<>();
+    
+        stack.push(List.of(start));
+    
+        while (!stack.isEmpty()) {
+            List<Point> path = stack.pop();
+            Point curr = path.get(path.size() - 1);
+    
+            if (curr.equals(end)) {
+                String sig = pathToString(path);
+                if (!tried.contains(sig)) return path;
+                else continue;
+            }
+    
+            for (int[] d : DIRS) {
+                int nr = curr.getRow() + d[0], nc = curr.getCol() + d[1];
+                Point next = new Point(nr, nc);
+    
+                if (inBounds(nr, nc) &&
+                   (grid.getGrid()[nr][nc] == '.' || next.equals(end)) &&
+                   !path.contains(next)) {
+    
+                    List<Point> newPath = new ArrayList<>(path);
+                    newPath.add(next);
+                    String sig = pathToString(newPath);
+    
+                    if (!visited.contains(sig)) {
+                        stack.push(newPath);
+                        visited.add(sig);
+                    }
+                }
+            }
+        }
+    
+        return null;
     }
 
     private List<Point> findUCSPath(Point start, Point end, Set<String> tried) {
@@ -208,8 +260,10 @@ public class Solver {
         return null;
     }
 
-    public boolean solveWith(String method, Consumer<char[][]> onStep) {
-        List<Map.Entry<Character, List<Point>>> sortedPairs = new ArrayList<>(endpoints.entrySet());
+    public boolean solveWith(String method, 
+                             Consumer<char[][]> onStep) {
+        List<Map.Entry<Character, List<Point>>> sortedPairs = 
+                    new ArrayList<>(endpoints.entrySet());
         List<Character> keys = new ArrayList<>();
         for (Map.Entry<Character, List<Point>> entry : sortedPairs) {
             keys.add(entry.getKey());
@@ -218,7 +272,10 @@ public class Solver {
         return backtrack(0, keys, onStep, method);
     }
     
-    private boolean backtrack(int idx, List<Character> keys, Consumer<char[][]> onStep, String method) {
+    private boolean backtrack(int idx, 
+                              List<Character> keys, 
+                              Consumer<char[][]> onStep, 
+                              String method) {
         if (idx == keys.size()) return true;
     
         char ch = keys.get(idx);
@@ -231,6 +288,7 @@ public class Solver {
     
         while (true) {
             List<Point> path = switch (method.toLowerCase()) {
+                case "dfs" -> findDFSPath(start, end, triedPaths);
                 case "ucs" -> findUCSPath(start, end, triedPaths);
                 case "gbfs" -> findGreedyPath(start, end, triedPaths);
                 case "astar" -> findAStarPath(start, end, triedPaths);

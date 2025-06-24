@@ -17,6 +17,14 @@ public class Point {
       return this.row == other.row && this.col == other.col;
   }
 
+  public static int manhattan(Point a, Point b) {
+    return Math.abs(a.getRow() - b.getRow()) + Math.abs(a.getCol() - b.getCol());
+  }
+
+  public static int manhattan(int r1, int c1, int r2, int c2) {
+    return Math.abs(r1 - r2) + Math.abs(c1 - c2);
+  }
+
   public int getRow() {
       return row;
   }
@@ -26,20 +34,7 @@ public class Point {
   }
 
   @Override
-  public int hashCode() {
-      return 31 * row + col;
-  }
-
-  @Override
   public String toString() {
       return "(" + row + "," + col + ")";
-  }
-
-  public static int manhattan(Point a, Point b) {
-    return Math.abs(a.getRow() - b.getRow()) + Math.abs(a.getCol() - b.getCol());
-  }
-
-  public static int manhattan(int r1, int c1, int r2, int c2) {
-    return Math.abs(r1 - r2) + Math.abs(c1 - c2);
   }
 }

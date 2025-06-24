@@ -36,7 +36,7 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        algorithmChoice.getItems().addAll("UCS", "GBFS", "A*");
+        algorithmChoice.getItems().addAll("DFS", "UCS", "GBFS", "A*");
         algorithmChoice.setValue("A*"); 
     }
 
@@ -72,6 +72,7 @@ public class MainController {
         Solver solver = new Solver(loadedGrid);
         new Thread(() -> {
             switch (selectedAlgorithm) {
+                case "DFS" -> solver.solveWith("dfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
                 case "UCS" -> solver.solveWith("ucs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
                 case "GBFS" -> solver.solveWith("gbfs", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
                 case "A*" -> solver.solveWith("astar", updatedGrid -> Platform.runLater(() -> renderGrid(updatedGrid)));
